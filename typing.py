@@ -63,7 +63,10 @@ if __name__ == "__main__":
 			# Exit on Ctrl-C
 			sys.exit(0)
 		else:
-			sys.stdout.write("\n")
+			display_char = user_char
+			if display_char == "\n":
+				display_char = ""
+			sys.stdout.write(display_char + "\n")
 			str_progress = 0
 
 		sys.stdout.flush()
