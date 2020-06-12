@@ -46,13 +46,35 @@ class GetCharWin:
 
 get_char = GetChar()
 
+# Control Sequence Introducer
+CSI = "\x1b["
+
+# Colour values which may be set to foreground or background in a tty
+BLACK        = 0
+RED          = 1
+GREEN        = 2
+BLUE         = 4
+YELLOW       = RED  | GREEN
+MAGENTA      = RED  | BLUE
+CYAN         = BLUE | GREEN
+WHITE        = RED  | GREEN | BLUE
+RESET_COLOUR = 9
+
+def fg(colour):
+	return CSI + "3" + str(colour) + "m"
+
+reset        = CSI +  "0m"
+bold         = CSI +  "1m"
+inverse      = CSI +  "7m"
+reset_weight = CSI + "22m"
+
 if __name__ == "__main__":
 	if not sys.stdin.isatty():
 		sys.stderr.write("This program must be run in a terminal")
 		sys.exit(1)
 	
 	# Print the string for the user to copy.
-	sys.stdout.write(practice_string + "\n")
+	sys.stdout.write(fg(CYAN) + bold + practice_string + reset + "\n")
 
 	str_progress = 0
 	while str_progress < len(practice_string):
@@ -79,7 +101,7 @@ if __name__ == "__main__":
 			if display_char == "\n":
 				display_char = ""
 
-			sys.stdout.write(display_char + "\n")
+			sys.stdout.write(fg(RED) + bold + display_char + reset + "\n")
 			sys.stdout.flush()
 
 			str_progress = 0
