@@ -2,6 +2,8 @@
 
 import sys
 
+# Placeholder string. This should be replaced with a
+# proper way of retrieving/generating practice text.
 practice_string = "Jived fox nymph grabs quick waltz"
 
 # Gets a single character from standard input.
@@ -49,23 +51,29 @@ if __name__ == "__main__":
 		sys.stderr.write("This program must be run in a terminal")
 		sys.exit(1)
 	
+	# Print the string for the user to copy.
 	sys.stdout.write(practice_string + "\n")
 
 	str_progress = 0
 	while str_progress < len(practice_string):
+		# Read a character of user input
 		user_char = get_char()
 		correct_char = practice_string[str_progress]
 
+		# If they typed the correct character, echo it
+		# out, and progress to the next character.
 		if user_char == correct_char:
 			sys.stdout.write(correct_char)
 			sys.stdout.flush()
 
 			str_progress += 1
 
+		# Exit on Ctrl-C
 		elif user_char == "\x03":
-			# Exit on Ctrl-C
 			sys.exit(0)
 
+		# If they typed the wrong character (except on the very first character),
+		# Print the wrong character out, reset the string.
 		elif str_progress > 0:
 			display_char = user_char
 			if display_char == "\n":
