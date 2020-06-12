@@ -58,17 +58,22 @@ if __name__ == "__main__":
 
 		if user_char == correct_char:
 			sys.stdout.write(correct_char)
+			sys.stdout.flush()
+
 			str_progress += 1
+
 		elif user_char == "\x03":
 			# Exit on Ctrl-C
 			sys.exit(0)
-		else:
+
+		elif str_progress > 0:
 			display_char = user_char
 			if display_char == "\n":
 				display_char = ""
-			sys.stdout.write(display_char + "\n")
-			str_progress = 0
 
-		sys.stdout.flush()
+			sys.stdout.write(display_char + "\n")
+			sys.stdout.flush()
+
+			str_progress = 0
 	
 	sys.stdout.write("\n")
