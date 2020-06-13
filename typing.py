@@ -68,19 +68,16 @@ bold         = CSI +  "1m"
 inverse      = CSI +  "7m"
 reset_weight = CSI + "22m"
 
-if __name__ == "__main__":
-	if not sys.stdin.isatty():
-		sys.stderr.write("This program must be run in a terminal")
-		sys.exit(1)
-	
+# Require the user to correctly enter the given string.
+def practice_line(string):
 	# Print the string for the user to copy.
-	sys.stdout.write(fg(CYAN) + bold + practice_string + reset + "\n")
+	sys.stdout.write(fg(CYAN) + bold + string + reset + "\n")
 
 	str_progress = 0
-	while str_progress < len(practice_string):
+	while str_progress < len(string):
 		# Read a character of user input
 		user_char = get_char()
-		correct_char = practice_string[str_progress]
+		correct_char = string[str_progress]
 
 		# If they typed the correct character, echo it
 		# out, and progress to the next character.
@@ -107,3 +104,17 @@ if __name__ == "__main__":
 			str_progress = 0
 	
 	sys.stdout.write("\n")
+
+if __name__ == "__main__":
+	if not sys.stdin.isatty():
+		sys.stderr.write("This program must be run in a terminal")
+		sys.exit(1)
+	
+	import wikisample
+	
+	sample_lines = []
+	while len(sample_lines) < 5:
+		sample_lines = wikisample.get_article(lang="simple")
+	
+	for line in sample_lines:
+		practice_line(line)
