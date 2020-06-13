@@ -42,6 +42,23 @@ def is_allowed(string, allowed_chars=english_chars, substitutions=equivalent_cha
 
 	return validated_string
 
+# Splits a line into one or more lines.
+# Returns a list of lines.
+def wrap_line(line, max_len):
+	if len(line) <= max_len:
+		return [line]
+	
+	words = re.split(r" ", line)
+	short_lines = [""]
+
+	for word in words:
+		if len(word) + len(short_lines[-1]) + 1 > max_len:
+			short_lines.append("")
+
+		short_lines[-1] += " " + word
+	
+	return [ln.strip() for ln in short_lines]
+
 # Cleans up unwanted sections in an article.
 def sanitise_article(text):
 	# Remove sections "References", "Other websites", "Related pages", "More reading"
@@ -79,6 +96,9 @@ def sanitise_article(text):
 	# Split long bracketed phrases at the end of sentences.
 	lines = [ln for sentence in lines for ln in re.split(r" (\(.{10,}\)\.)", sentence)]
 	lines = [ln for ln in lines if ln != ""]
+
+	# Split long lines
+	lines = [short_ln for long_ln in lines for short_ln in wrap_line(long_ln, 160)]
 
 	return lines
 
