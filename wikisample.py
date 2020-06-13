@@ -62,8 +62,9 @@ def sanitise_article(text):
 	# Further split into lines
 	lines = [ln for sentence in lines for ln in re.split(r"\n", sentence)]
 
-	# Strip leading and trailing whitespace
+	# Strip excess whitespace
 	lines = [ln.strip() for ln in lines]
+	lines = [re.sub(r"\s+", " ", ln) for ln in lines]
 
 	# Filter out short sentences
 	lines = [ln for ln in lines if len(ln) > 3]
