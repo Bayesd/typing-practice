@@ -115,6 +115,8 @@ if __name__ == "__main__":
 	sample_lines = []
 	while len(sample_lines) < 5:
 		sample_lines = wikisample.get_article(lang="simple")
+
+	sample_lines = sample_lines[0:10]
 	
 	for line in sample_lines:
 		practice_line(line)
