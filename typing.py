@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import sys
+import time
 
 # Placeholder string. This should be replaced with a
 # proper way of retrieving/generating practice text.
@@ -74,6 +75,7 @@ def practice_line(string):
 	sys.stdout.write(fg(CYAN) + bold + string + reset + "\n")
 
 	str_progress = 0
+	start_time = None
 	while str_progress < len(string):
 		# Read a character of user input
 		user_char = get_char()
@@ -84,6 +86,9 @@ def practice_line(string):
 		if user_char == correct_char:
 			sys.stdout.write(correct_char)
 			sys.stdout.flush()
+
+			if str_progress == 0:
+				start_time = time.time()
 
 			str_progress += 1
 
@@ -101,9 +106,19 @@ def practice_line(string):
 			sys.stdout.write(fg(RED) + bold + display_char + reset + "\n")
 			sys.stdout.flush()
 
+			start_time = None
+
 			str_progress = 0
-	
+
 	sys.stdout.write("\n")
+
+	time_elapsed = None
+	if start_time is not None:
+		end_time = time.time()
+		time_elapsed = end_time - start_time
+		sys.stdout.write("Time taken: " + str(time_elapsed) + "\n")
+
+	return time_elapsed
 
 if __name__ == "__main__":
 	if not sys.stdin.isatty():
