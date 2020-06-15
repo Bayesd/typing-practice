@@ -116,7 +116,6 @@ def practice_line(string):
 	if start_time is not None:
 		end_time = time.time()
 		time_elapsed = end_time - start_time
-		sys.stdout.write("Time taken: " + str(time_elapsed) + "\n")
 
 	return time_elapsed
 
@@ -132,6 +131,14 @@ if __name__ == "__main__":
 		sample_lines = wikisample.get_article(lang="simple")
 
 	sample_lines = sample_lines[0:10]
+
+	total_time = 0
+	total_chars = 0
 	
 	for line in sample_lines:
-		practice_line(line)
+		total_time += practice_line(line)
+		total_chars += len(line)
+	
+	wpm = total_chars / total_time * 12
+	
+	sys.stdout.write(fg(GREEN) + f"Speed: {wpm:.1f} wpm" + reset + "\n")
