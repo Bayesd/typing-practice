@@ -66,12 +66,17 @@ inverse      = CSI +  "7m"
 reset_weight = CSI + "22m"
 
 # Require the user to correctly enter the given string.
-def practice_line(string):
+#
+# max_fails - How many failed attempts before a failure. Pass negative to not fail.
+#
+# returns (bool success, float time_taken)
+def practice_line(string, max_fails=10):
 	# Print the string for the user to copy.
 	sys.stdout.write(fg(CYAN) + bold + string + reset + "\n")
 
 	str_progress = 0
 	start_time = None
+	failures_remaining = int(max_fails)
 	while str_progress < len(string):
 		# Read a character of user input
 		user_char = get_char()
@@ -104,6 +109,10 @@ def practice_line(string):
 
 			start_time = None
 
+			failures_remaining -= 1
+			if failures_remaining == 0:
+				return False, None
+
 			str_progress = 0
 
 	sys.stdout.write("\n")
@@ -113,7 +122,29 @@ def practice_line(string):
 		end_time = time.time()
 		time_elapsed = end_time - start_time
 
-	return time_elapsed
+	return True, time_elapsed
+
+# Practice a passage consisting of several lines
+def practice_passage(lines):
+	total_time = 0
+	total_chars = 0
+	
+	current_progress = 0
+	while current_progress < len(lines):
+		line = lines[current_progress]
+
+		success, time_taken = practice_line(line)
+
+		if success:
+			total_time += time_taken
+			total_chars += len(line)
+			current_progress += 1
+		else:
+			current_progress -= 1
+	
+	wpm = total_chars / total_time * 12
+	
+	sys.stdout.write(fg(GREEN) + f"Speed: {wpm:.1f} wpm" + reset + "\n")
 
 if __name__ == "__main__":
 	if not sys.stdin.isatty():
@@ -127,14 +158,4 @@ if __name__ == "__main__":
 		sample_lines = wikisample.get_article(lang="simple")
 
 	sample_lines = sample_lines[0:10]
-
-	total_time = 0
-	total_chars = 0
-	
-	for line in sample_lines:
-		total_time += practice_line(line)
-		total_chars += len(line)
-	
-	wpm = total_chars / total_time * 12
-	
-	sys.stdout.write(fg(GREEN) + f"Speed: {wpm:.1f} wpm" + reset + "\n")
+	practice_passage(sample_lines)
