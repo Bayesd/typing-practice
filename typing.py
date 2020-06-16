@@ -3,10 +3,6 @@
 import sys
 import time
 
-# Placeholder string. This should be replaced with a
-# proper way of retrieving/generating practice text.
-practice_string = "Jived fox nymph grabs quick waltz"
-
 # Gets a single character from standard input.
 # Does not echo to the screen.
 # Adapted from: https://code.activestate.com/recipes/134892/
