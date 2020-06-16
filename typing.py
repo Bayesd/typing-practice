@@ -139,7 +139,7 @@ def practice_passage(lines):
 			total_time += time_taken
 			total_chars += len(line)
 			current_progress += 1
-		else:
+		elif current_progress > 0:
 			current_progress -= 1
 	
 	wpm = total_chars / total_time * 12
