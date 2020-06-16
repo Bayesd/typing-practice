@@ -1,6 +1,7 @@
 #!/bin/python3
 
 import re
+import random
 
 import wikipedia as wiki
 import nltk
@@ -19,10 +20,20 @@ def get_article(title=None, lang="en"):
 	if lang is not None:
 		wiki.set_lang(lang)
 
+	using_random = False
 	if title is None:
 		title = wiki.random()
+		using_random = True
 	
-	page = wiki.page(title)
+	try:
+		page = wiki.page(title)
+	except wiki.exceptions.DisambiguationError as e:
+		if not using_random:
+			raise e
+
+		candidates = [t for t in e.options if " (disambiguation)" not in t]
+		title = random.choice(candidates)
+		page = wiki.page(title)
 
 	return [title, *sanitise_article(page.content)]
 
