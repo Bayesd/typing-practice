@@ -2,6 +2,7 @@
 
 import sys
 import time
+import argparse
 
 # Gets a single character from standard input.
 # Does not echo to the screen.
@@ -125,7 +126,7 @@ def practice_line(string, max_fails=10):
 	return True, time_elapsed
 
 # Practice a passage consisting of several lines
-def practice_passage(lines):
+def practice_passage(lines, fail_lines=10):
 	total_time = 0
 	total_chars = 0
 	
@@ -133,7 +134,7 @@ def practice_passage(lines):
 	while current_progress < len(lines):
 		line = lines[current_progress]
 
-		success, time_taken = practice_line(line)
+		success, time_taken = practice_line(line, max_fails=fail_lines)
 
 		if success:
 			total_time += time_taken
@@ -147,6 +148,13 @@ def practice_passage(lines):
 	sys.stdout.write(fg(GREEN) + f"Speed: {wpm:.1f} wpm" + reset + "\n")
 
 if __name__ == "__main__":
+	parser = argparse.ArgumentParser("Typing Practice")
+
+	parser.add_argument("--fail-lines", "-f", type=int, default=10,
+		help="How many failures before the user fails the line?")
+
+	args = parser.parse_args()
+
 	if not sys.stdin.isatty():
 		sys.stderr.write("This program must be run in a terminal")
 		sys.exit(1)
@@ -158,4 +166,4 @@ if __name__ == "__main__":
 		sample_lines = wikisample.get_article(lang="simple")
 
 	sample_lines = sample_lines[0:10]
-	practice_passage(sample_lines)
+	practice_passage(sample_lines, fail_lines=args.fail_lines)
