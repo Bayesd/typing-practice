@@ -20,20 +20,31 @@ def get_article(title=None, lang="en"):
 	if lang is not None:
 		wiki.set_lang(lang)
 
-	using_random = False
-	if title is None:
-		title = wiki.random()
-		using_random = True
-	
-	try:
-		page = wiki.page(title)
-	except wiki.exceptions.DisambiguationError as e:
-		if not using_random:
-			raise e
+	using_random = title is None
 
-		candidates = [t for t in e.options if " (disambiguation)" not in t]
-		title = random.choice(candidates)
-		page = wiki.page(title)
+	page = None
+	while True:
+		if using_random:
+			title = wiki.random()
+
+		candidate_page_titles = None
+
+		try:
+			page = wiki.page(title)
+			break
+		except wiki.exceptions.DisambiguationError as e:
+			if not using_random:
+				raise e
+			candidate_page_titles = [t for t in e.options if " (disambiguation)" not in t]
+
+		# If we fall through to here, the requested page was a disambiguation, so try picking a random option.
+		title = random.choice(candidate_page_titles)
+		try:
+			page = wiki.page(title)
+			break
+		except wiki.exceptions.DisambiguationError as e:
+			# If we get another disambiguation page, just pick a new page.
+			pass
 
 	return [title, *sanitise_article(page.content)]
 
