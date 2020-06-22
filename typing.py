@@ -169,7 +169,7 @@ def practice_passage(lines, fail_lines=10):
 	wpm_correct = total_correct_chars / total_correct_time * 12
 	wpm_all     = total_chars         / total_time         * 12
 	
-	sys.stdout.write(fg(GREEN) + f"Speed (all): {    wpm_all    :.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Speed (all):     {wpm_all    :.1f} wpm" + reset + "\n")
 	sys.stdout.write(fg(GREEN) + f"Speed (correct): {wpm_correct:.1f} wpm" + reset + "\n")
 
 if __name__ == "__main__":
