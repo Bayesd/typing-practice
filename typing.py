@@ -66,6 +66,8 @@ bold         = CSI +  "1m"
 inverse      = CSI +  "7m"
 reset_weight = CSI + "22m"
 
+bell = "\a"
+
 # Require the user to correctly enter the given string.
 #
 # max_fails - How many failed attempts before a failure. Pass negative to not fail.
@@ -116,7 +118,7 @@ def practice_line(string, max_fails=10):
 			if display_char == "\n":
 				display_char = ""
 
-			sys.stdout.write(fg(RED) + bold + display_char + reset + "\n")
+			sys.stdout.write(bell + fg(RED) + bold + display_char + reset + "\n")
 			sys.stdout.flush()
 
 			total_time += time.time() - start_time
@@ -129,6 +131,11 @@ def practice_line(string, max_fails=10):
 				return False, None, total_chars, total_time
 
 			str_progress = 0
+
+		# If the user mis-types the first letter of the line, don't penalise them for it.
+		else:
+			sys.stdout.write(bell)
+			sys.stdout.flush()
 
 	sys.stdout.write("\n")
 
