@@ -1,8 +1,13 @@
 #!/bin/python3
 
 import sys
+import math
 import time
 import argparse
+
+# How long to consider a break between keys. In seconds.
+# Intervals longer than this won't be considered during speed calculations.
+MAX_KEY_INTERVAL = 10
 
 # Gets a single character from standard input.
 # Does not echo to the screen.
@@ -68,26 +73,91 @@ reset_weight = CSI + "22m"
 
 bell = "\a"
 
+# Holds stats about one or more attempts at typing a line.
+class SessionStats:
+	__slots__ = [
+		# Stats for correct line attempts
+		"correct_seconds",
+		"correct_chars",
+
+		# Stats for all attempts
+		"total_seconds",
+		"total_chars",
+
+		# Stats for the current line attempt
+		"attempt_seconds",
+		"attempt_chars",
+
+		# Timestamp for the last character typed, or None at the start of a line
+		"last_key_time",
+	]
+
+	def __init__(self):
+		self.correct_seconds = 0
+		self.correct_chars = 0
+
+		self.total_seconds = 0
+		self.total_chars = 0
+
+		self.attempt_seconds = 0
+		self.attempt_chars = 0
+
+		self.last_key_time = None
+
+	def type_char(self):
+		now = time.time()
+
+		if self.last_key_time is not None:
+			elapsed = now - self.last_key_time
+		else:
+			elapsed = math.inf
+
+		self.last_key_time = now
+
+		# If the user had a long break between this key and the last, don't count the keystroke for timing/wpm purposes
+		if elapsed > MAX_KEY_INTERVAL:
+			return
+
+		self.total_seconds += elapsed
+		self.attempt_seconds += elapsed
+
+		self.total_chars += 1
+		self.attempt_chars += 1
+
+	def end_attempt(self, success=False):
+		if success:
+			self.correct_seconds += self.attempt_seconds
+			self.correct_chars += self.attempt_chars
+
+		self.attempt_seconds = 0
+		self.attempt_chars = 0
+
+		self.last_key_time = None
+	
+	def total_wpm(self):
+		return self.total_chars / self.total_seconds * 12
+	
+	def correct_wpm(self):
+		return self.correct_chars / self.correct_seconds * 12
+	
+	# TODO: function to add another SessionStats to this one (use += __iadd__) 
+
 # Require the user to correctly enter the given string.
 #
 # max_fails - How many failed attempts before a failure. Pass negative to not fail.
 #
 # returns (
-# 	bool  success     - Did the user successfully complete the line?
-# 	float time_taken  - How long did they take on the successful attempt. None if they failed.
-# 	int   total_chars - How many characters did the user type in total, including failed attempts?
-# 	int   total_time  - How long did the user spend on all attempts? Excludes time spent between attempts.
+# 	bool         success - Did the user successfully complete the line?
+# 	SessionStats stats   - Statistics such as characters typed and taken.
 # )
 def practice_line(string, max_fails=10):
 	# Print the string for the user to copy.
 	sys.stdout.write(fg(CYAN) + bold + string + reset + "\n")
 
 	str_progress = 0
-	start_time = None
 	failures_remaining = int(max_fails)
 
-	total_chars = 0
-	total_time = 0
+	stats = SessionStats()
 
 	while str_progress < len(string):
 		# Read a character of user input
@@ -100,10 +170,7 @@ def practice_line(string, max_fails=10):
 			sys.stdout.write(correct_char)
 			sys.stdout.flush()
 
-			total_chars += 1
-
-			if str_progress == 0:
-				start_time = time.time()
+			stats.type_char()
 
 			str_progress += 1
 
@@ -121,14 +188,12 @@ def practice_line(string, max_fails=10):
 			sys.stdout.write(bell + fg(RED) + bold + display_char + reset + "\n")
 			sys.stdout.flush()
 
-			total_time += time.time() - start_time
-			total_chars += 1
-
-			start_time = None
+			stats.type_char()
+			stats.end_attempt(False)
 
 			failures_remaining -= 1
 			if failures_remaining == 0:
-				return False, None, total_chars, total_time
+				return False, stats
 
 			str_progress = 0
 
@@ -139,13 +204,8 @@ def practice_line(string, max_fails=10):
 
 	sys.stdout.write("\n")
 
-	time_elapsed = None
-	if start_time is not None:
-		end_time = time.time()
-		time_elapsed = end_time - start_time
-		total_time += time_elapsed
-
-	return True, time_elapsed, total_chars, total_time
+	stats.end_attempt(True)
+	return True, stats
 
 # Practice a passage consisting of several lines
 def practice_passage(lines, fail_lines=10):
