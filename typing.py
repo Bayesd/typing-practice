@@ -140,7 +140,14 @@ class SessionStats:
 	def correct_wpm(self):
 		return self.correct_chars / self.correct_seconds * 12
 	
-	# TODO: function to add another SessionStats to this one (use += __iadd__) 
+	def __iadd__(self, other):
+		self.correct_seconds += other.correct_seconds
+		self.correct_chars += other.correct_chars
+
+		self.total_seconds += other.total_seconds
+		self.total_chars += other.total_chars
+
+		return self
 
 # Require the user to correctly enter the given string.
 #
@@ -186,7 +193,6 @@ def practice_line(string, max_fails=10):
 				display_char = ""
 
 			sys.stdout.write(bell + fg(RED) + bold + display_char + reset + "\n")
-			sys.stdout.flush()
 
 			stats.type_char()
 			stats.end_attempt(False)
@@ -209,35 +215,22 @@ def practice_line(string, max_fails=10):
 
 # Practice a passage consisting of several lines
 def practice_passage(lines, fail_lines=10):
-	# Time/chars on successful attempts
-	total_correct_time = 0
-	total_correct_chars = 0
-
-	# Time/chars on all attempts
-	total_time = 0
-	total_chars = 0
-	
+	stats = SessionStats()
 	current_progress = 0
 	while current_progress < len(lines):
 		line = lines[current_progress]
 
-		success, time_taken, total_line_chars, total_line_time = practice_line(line, max_fails=fail_lines)
+		success, line_stats = practice_line(line, max_fails=fail_lines)
 
-		total_time += total_line_time
-		total_chars += total_line_chars
+		stats += line_stats
 
 		if success:
-			total_correct_time += time_taken
-			total_correct_chars += len(line)
 			current_progress += 1
 		elif current_progress > 0:
 			current_progress -= 1
 	
-	wpm_correct = total_correct_chars / total_correct_time * 12
-	wpm_all     = total_chars         / total_time         * 12
-	
-	sys.stdout.write(fg(GREEN) + f"Speed (all):     {wpm_all    :.1f} wpm" + reset + "\n")
-	sys.stdout.write(fg(GREEN) + f"Speed (correct): {wpm_correct:.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Speed (all):     {stats.total_wpm()  :.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Speed (correct): {stats.correct_wpm():.1f} wpm" + reset + "\n")
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Typing Practice")
