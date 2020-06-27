@@ -116,6 +116,10 @@ class SessionStats:
 		# Stats for the current line attempt
 		"attempt_wpm",
 
+		# How many characters were typed correctly or incorrectly?
+		"correct_chars",
+		"incorrect_chars",
+
 		# Timestamp for the last character typed, or None at the start of a line
 		"last_key_time",
 	]
@@ -125,9 +129,19 @@ class SessionStats:
 		self.total_line_wpm = WPM()
 		self.attempt_wpm = WPM()
 
+		self.correct_chars = 0
+		self.incorrect_chars = 0
+
 		self.last_key_time = None
 
-	def type_char(self):
+	def type_char(self, correct):
+		# Count character for accuracy calculations
+		if correct:
+			self.correct_chars += 1
+		else:
+			self.incorrect_chars += 1
+
+		# Find out how long this character took to type
 		now = time.time()
 
 		if self.last_key_time is not None:
@@ -157,10 +171,17 @@ class SessionStats:
 	
 	def correct_wpm(self):
 		return self.correct_line_wpm.get_wpm()
+
+	def accuracy(self):
+		total_chars = self.correct_chars + self.incorrect_chars
+		return self.correct_chars / total_chars
 	
 	def __iadd__(self, other):
 		self.correct_line_wpm += other.correct_line_wpm
 		self.total_line_wpm += other.total_line_wpm
+
+		self.correct_chars += other.correct_chars
+		self.incorrect_chars += other.incorrect_chars
 
 		return self
 
@@ -192,7 +213,7 @@ def practice_line(string, max_fails=10):
 			sys.stdout.write(correct_char)
 			sys.stdout.flush()
 
-			stats.type_char()
+			stats.type_char(True)
 
 			str_progress += 1
 
@@ -209,7 +230,7 @@ def practice_line(string, max_fails=10):
 
 			sys.stdout.write(bell + fg(RED) + bold + display_char + reset + "\n")
 
-			stats.type_char()
+			stats.type_char(False)
 			stats.end_attempt(False)
 
 			failures_remaining -= 1
@@ -244,8 +265,9 @@ def practice_passage(lines, fail_lines=10):
 		elif current_progress > 0:
 			current_progress -= 1
 	
-	sys.stdout.write(fg(GREEN) + f"Speed (all):     {stats.total_wpm()  :.1f} wpm" + reset + "\n")
-	sys.stdout.write(fg(GREEN) + f"Speed (correct): {stats.correct_wpm():.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Speed (all):     {stats.total_wpm()     :.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Speed (correct): {stats.correct_wpm()   :.1f} wpm" + reset + "\n")
+	sys.stdout.write(fg(GREEN) + f"Accuracy:        {stats.accuracy() * 100:.1f}%"    + reset + "\n")
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Typing Practice")
