@@ -73,34 +73,57 @@ reset_weight = CSI + "22m"
 
 bell = "\a"
 
+# Holds information for characters typed, and time spent, for calculating wpm
+class WPM:
+	__slots__ = [
+		"chars",
+		"seconds",
+	]
+
+	def __init__(self, chars=0, seconds=0):
+		self.chars = chars
+		self.seconds = seconds
+
+	def reset(self):
+		self.chars = 0
+		self.seconds = 0
+	
+	def add_char(self, seconds):
+		self.chars += 1
+		self.seconds += seconds
+	
+	def get_wpm(self):
+		return self.chars / self.seconds * 12
+
+	def __iadd__(self, other):
+		if isinstance(other, WPM):
+			self.chars += other.chars
+			self.seconds += other.seconds
+
+			return self
+
+		raise TypeError(f"Cannot add {repr(other)} to WPM")
+
 # Holds stats about one or more attempts at typing a line.
 class SessionStats:
 	__slots__ = [
 		# Stats for correct line attempts
-		"correct_seconds",
-		"correct_chars",
+		"correct_line_wpm",
 
 		# Stats for all attempts
-		"total_seconds",
-		"total_chars",
+		"total_line_wpm",
 
 		# Stats for the current line attempt
-		"attempt_seconds",
-		"attempt_chars",
+		"attempt_wpm",
 
 		# Timestamp for the last character typed, or None at the start of a line
 		"last_key_time",
 	]
 
 	def __init__(self):
-		self.correct_seconds = 0
-		self.correct_chars = 0
-
-		self.total_seconds = 0
-		self.total_chars = 0
-
-		self.attempt_seconds = 0
-		self.attempt_chars = 0
+		self.correct_line_wpm = WPM()
+		self.total_line_wpm = WPM()
+		self.attempt_wpm = WPM()
 
 		self.last_key_time = None
 
@@ -118,34 +141,26 @@ class SessionStats:
 		if elapsed > MAX_KEY_INTERVAL:
 			return
 
-		self.total_seconds += elapsed
-		self.attempt_seconds += elapsed
-
-		self.total_chars += 1
-		self.attempt_chars += 1
+		self.total_line_wpm.add_char(elapsed)
+		self.attempt_wpm.add_char(elapsed)
 
 	def end_attempt(self, success=False):
 		if success:
-			self.correct_seconds += self.attempt_seconds
-			self.correct_chars += self.attempt_chars
+			self.correct_line_wpm += self.attempt_wpm
 
-		self.attempt_seconds = 0
-		self.attempt_chars = 0
+		self.attempt_wpm.reset()
 
 		self.last_key_time = None
 	
 	def total_wpm(self):
-		return self.total_chars / self.total_seconds * 12
+		return self.total_line_wpm.get_wpm()
 	
 	def correct_wpm(self):
-		return self.correct_chars / self.correct_seconds * 12
+		return self.correct_line_wpm.get_wpm()
 	
 	def __iadd__(self, other):
-		self.correct_seconds += other.correct_seconds
-		self.correct_chars += other.correct_chars
-
-		self.total_seconds += other.total_seconds
-		self.total_chars += other.total_chars
+		self.correct_line_wpm += other.correct_line_wpm
+		self.total_line_wpm += other.total_line_wpm
 
 		return self
 
