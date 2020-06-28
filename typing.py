@@ -146,6 +146,9 @@ class SessionStats:
 		# Stats for the current line attempt
 		"attempt_wpm",
 
+		# Stats for each character
+		"char_accuracies",
+
 		# Timestamp for the last character typed, or None at the start of a line
 		"last_key_time",
 	]
@@ -157,11 +160,20 @@ class SessionStats:
 
 		self.total_acc = Accuracy()
 
-		self.last_key_time = None
+		self.char_accuracies = {}
 
-	def type_char(self, correct):
+		self.last_key_time = None
+	
+	def init_char_stats(self, char):
+		if char not in self.char_accuracies:
+			self.char_accuracies[char] = Accuracy()
+
+	def type_char(self, correct, char):
 		# Count character for accuracy calculations
 		self.total_acc.type_char(correct)
+
+		self.init_char_stats(char)
+		self.char_accuracies[char].type_char(correct)
 
 		# Find out how long this character took to type
 		now = time.time()
@@ -197,6 +209,11 @@ class SessionStats:
 	def accuracy(self):
 		return self.total_acc.get_acc()
 	
+	def _dump_char_acc(self):
+		sys.stdout.write(fg(MAGENTA) + "[DEBUG] Character Stats:" + reset + "\n")
+		for char, acc in self.char_accuracies.items():
+			sys.stdout.write(fg(MAGENTA) + f"\t{char} -> {acc.get_acc()}" + reset + "\n")
+	
 	def __iadd__(self, other):
 		if not isinstance(other, SessionStats):
 			raise TypeError(f"Cannot add {repr(other)} to SessionStats")
@@ -205,6 +222,10 @@ class SessionStats:
 		self.total_line_wpm += other.total_line_wpm
 
 		self.total_acc += other.total_acc
+
+		for char, acc in other.char_accuracies.items():
+			self.init_char_stats(char)
+			self.char_accuracies[char] += acc
 
 		return self
 
@@ -236,7 +257,7 @@ def practice_line(string, max_fails=10):
 			sys.stdout.write(correct_char)
 			sys.stdout.flush()
 
-			stats.type_char(True)
+			stats.type_char(True, correct_char)
 
 			str_progress += 1
 
@@ -253,7 +274,7 @@ def practice_line(string, max_fails=10):
 
 			sys.stdout.write(bell + fg(RED) + bold + display_char + reset + "\n")
 
-			stats.type_char(False)
+			stats.type_char(False, correct_char)
 			stats.end_attempt(False)
 
 			failures_remaining -= 1
@@ -291,6 +312,7 @@ def practice_passage(lines, fail_lines=10):
 	sys.stdout.write(fg(GREEN) + f"Speed (all):     {stats.total_wpm()     :.1f} wpm" + reset + "\n")
 	sys.stdout.write(fg(GREEN) + f"Speed (correct): {stats.correct_wpm()   :.1f} wpm" + reset + "\n")
 	sys.stdout.write(fg(GREEN) + f"Accuracy:        {stats.accuracy() * 100:.1f}%"    + reset + "\n")
+	stats._dump_char_acc()
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Typing Practice")
