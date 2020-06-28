@@ -104,6 +104,35 @@ class WPM:
 
 		raise TypeError(f"Cannot add {repr(other)} to WPM")
 
+# Holds information for the number of characters typed correctly and incorrectly for calculating accuracy
+class Accuracy:
+	__slots__ = [
+		"correct",
+		"incorrect",
+	]
+
+	def __init__(self, correct=0, incorrect=0):
+		self.correct = correct
+		self.incorrect = incorrect
+
+	def type_char(self, correct=True):
+		if correct:
+			self.correct += 1
+		else:
+			self.incorrect += 1
+	
+	def get_acc(self):
+		return self.correct / (self.correct + self.incorrect)
+
+	def __iadd__(self, other):
+		if not isinstance(other, Accuracy):
+			raise TypeError(f"Cannot add {repr(other)} to Accuracy")
+
+		self.correct += other.correct
+		self.incorrect += other.incorrect
+
+		return self
+
 # Holds stats about one or more attempts at typing a line.
 class SessionStats:
 	__slots__ = [
@@ -112,13 +141,10 @@ class SessionStats:
 
 		# Stats for all attempts
 		"total_line_wpm",
+		"total_acc",
 
 		# Stats for the current line attempt
 		"attempt_wpm",
-
-		# How many characters were typed correctly or incorrectly?
-		"correct_chars",
-		"incorrect_chars",
 
 		# Timestamp for the last character typed, or None at the start of a line
 		"last_key_time",
@@ -129,17 +155,13 @@ class SessionStats:
 		self.total_line_wpm = WPM()
 		self.attempt_wpm = WPM()
 
-		self.correct_chars = 0
-		self.incorrect_chars = 0
+		self.total_acc = Accuracy()
 
 		self.last_key_time = None
 
 	def type_char(self, correct):
 		# Count character for accuracy calculations
-		if correct:
-			self.correct_chars += 1
-		else:
-			self.incorrect_chars += 1
+		self.total_acc.type_char(correct)
 
 		# Find out how long this character took to type
 		now = time.time()
@@ -173,15 +195,16 @@ class SessionStats:
 		return self.correct_line_wpm.get_wpm()
 
 	def accuracy(self):
-		total_chars = self.correct_chars + self.incorrect_chars
-		return self.correct_chars / total_chars
+		return self.total_acc.get_acc()
 	
 	def __iadd__(self, other):
+		if not isinstance(other, SessionStats):
+			raise TypeError(f"Cannot add {repr(other)} to SessionStats")
+
 		self.correct_line_wpm += other.correct_line_wpm
 		self.total_line_wpm += other.total_line_wpm
 
-		self.correct_chars += other.correct_chars
-		self.incorrect_chars += other.incorrect_chars
+		self.total_acc += other.total_acc
 
 		return self
 
