@@ -212,7 +212,7 @@ class SessionStats:
 	def _dump_char_acc(self):
 		sys.stdout.write(fg(MAGENTA) + "[DEBUG] Character Stats:" + reset + "\n")
 		for char, acc in self.char_accuracies.items():
-			sys.stdout.write(fg(MAGENTA) + f"\t{char} -> {acc.get_acc()}" + reset + "\n")
+			sys.stdout.write(fg(MAGENTA) + f"\t{char} -> {acc.get_acc() * 100:.2f}%, {acc.incorrect} errors" + reset + "\n")
 	
 	def __iadd__(self, other):
 		if not isinstance(other, SessionStats):
