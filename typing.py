@@ -172,6 +172,7 @@ class SessionStats:
 		# Count character for accuracy calculations
 		self.total_acc.type_char(correct)
 
+		char = char.lower()
 		self.init_char_stats(char)
 		self.char_accuracies[char].type_char(correct)
 
