@@ -218,6 +218,24 @@ class SessionStats:
 
 			sys.stdout.write(fg(MAGENTA) + f"\t{char} -> {acc.get_acc() * 100:.2f}%, {acc.incorrect} errors" + reset + "\n")
 	
+	def least_accurate_char(self, min_mistakes=3):
+		worst_char = None
+		worst_acc = None
+		worst_acc_num = None
+
+		for char, acc in self.char_accuracies.items():
+			if acc.incorrect < min_mistakes:
+				continue
+
+			acc_num = acc.get_acc()
+
+			if worst_acc == None or acc_num < worst_acc_num:
+				worst_char = char
+				worst_acc = acc
+				worst_acc_num = acc_num
+
+		return worst_char, worst_acc
+	
 	def __iadd__(self, other):
 		if not isinstance(other, SessionStats):
 			raise TypeError(f"Cannot add {repr(other)} to SessionStats")
@@ -316,7 +334,10 @@ def practice_passage(lines, fail_lines=10):
 	sys.stdout.write(fg(GREEN) + f"Speed (all):     {stats.total_wpm()     :.1f} wpm" + reset + "\n")
 	sys.stdout.write(fg(GREEN) + f"Speed (correct): {stats.correct_wpm()   :.1f} wpm" + reset + "\n")
 	sys.stdout.write(fg(GREEN) + f"Accuracy:        {stats.accuracy() * 100:.1f}%"    + reset + "\n")
-	stats._dump_char_acc()
+
+	worst_char, worst_acc = stats.least_accurate_char(3)
+	if worst_char is not None:
+		sys.stdout.write(fg(GREEN) + f"Least Accurate Character: '{worst_char}' ({worst_acc.get_acc() * 100:.1f}%)" + reset + "\n")
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser("Typing Practice")
